@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup as bs
 import requests
 import urllib
 import re
-import aria2p
 import os
 import subprocess
 import sys
@@ -108,7 +107,9 @@ if __name__ == '__main__':
     lol = bs(page, 'html.parser')
     Storage = searchResults()
     for i in range(len(Storage)):
-        print(i, ' ', Storage[i])
+        print(i, ' ', Storage[i], '\n',
+              Storage[i].size, '\n',
+              'Seeders', Storage[i].seeders )
     choice = input('Which one would you like to select? \n')
     inOrout = input('Would you like to use an external torrent handler? [Y,n] \n')
     magnet = Storage[int(choice)].magnet
