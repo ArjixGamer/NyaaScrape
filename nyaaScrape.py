@@ -58,7 +58,7 @@ def torrentDownloader(magnet,inOrout):
                     print (output.strip())
             rc = process.poll()
             return rc
-        run_command()
+        run_command(magnet)
         
 
 def searchResults():
