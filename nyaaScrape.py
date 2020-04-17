@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 def userSelection():
-    cataChecker = input("Anime or Manga \n")
+    cataChecker = sys.argv[1]
     if cataChecker == 'Anime' or cataChecker == 'anime' or cataChecker == 'a':
         search = showCheck()
         filt = filterCheck()
@@ -26,7 +26,7 @@ def userSelection():
 def filterCheck():
     filta = ['size','seeders','id']
     ud = ['asc','desc']
-    filt = input("Filter by Size (0), Seeders (1), Date (2) \n")
+    filt = 1
     if int(filt) < 3 and int(filt) > -1:
         return filta[int(filt)]
     else:
@@ -34,14 +34,14 @@ def filterCheck():
         
 def udCheck():
     ud = ['desc','asc']
-    choice = input("Descending (0) or Ascending? (1) \n")
+    choice = 0
     if int(choice) < 2 and int(choice) > -1:
         return ud[int(choice)]
     else:
         raise Exception("Please use the correct selections!")
 
 def showCheck():
-    search = input("What do you want to search for? \n")
+    search = str(sys.argv[2])
     return search
 
 def torrentDownloader(magnet,inOrout):
@@ -111,7 +111,7 @@ if __name__ == '__main__':
               Storage[i].size, '\n',
               'Seeders', Storage[i].seeders )
     choice = input('Which one would you like to select? \n')
-    inOrout = input('Would you like to use an external torrent handler? [Y,n] \n')
+    inOrout = 'n'
     magnet = Storage[int(choice)].magnet
     torrentDownloader(magnet,inOrout)
     print('Download has completed.')
