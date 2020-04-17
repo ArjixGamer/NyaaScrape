@@ -61,7 +61,7 @@ def torrentDownloader(magnet,inOrout):
         run_command(magnet)
         
 
-def searchResults():
+def searchResults(link):
     Storage = [
         SearchResult(
         title = i.select("a:not(.comments)")[1].get("title"),
@@ -69,9 +69,24 @@ def searchResults():
         seeders = i.find_all('td',class_= 'text-center')[3].text,
         leechers = i.find_all('td',class_ = 'text-center')[4].text,
         magnet = i.find_all('a',{'href':re.compile(regex)})[0].get('href'))
-        for i in lol.select("tr.default, tr.success")
+        for i in link.select("tr.default, tr.success")
     ]
     return Storage
+def searcher():
+    Link = userSelection()
+    page = requests.get(Link).text
+    lol = bs(page, 'html.parser')
+    Storage = searchResults(lol)
+    for i in range(len(Storage)):
+        print(i, ' ', Storage[i], '\n',
+            Storage[i].size, '\n',
+            'Seeders', Storage[i].seeders )
+    choice = input('Which one would you like to select? \n')
+    inOrout = input('Would you like to use an external torrent handler? [Y,n] \n')
+    magnet = Storage[int(choice)].magnet
+    torrentDownloader(magnet,inOrout)
+    recursionCheck = input('Do you want to download another? [Y/n]')
+    return recursionCheck
 
 class SearchResult:
     def __init__(self, title, size, seeders, leechers, magnet, poster='', meta=''):
@@ -102,16 +117,11 @@ class SearchResult:
 
 if __name__ == '__main__':
     regex = r'(magnet:)+[^"]*'
-    Link = userSelection()
-    page = requests.get(Link).text
-    lol = bs(page, 'html.parser')
-    Storage = searchResults()
-    for i in range(len(Storage)):
-        print(i, ' ', Storage[i], '\n',
-              Storage[i].size, '\n',
-              'Seeders', Storage[i].seeders )
-    choice = input('Which one would you like to select? \n')
-    inOrout = input('Would you like to use an external torrent handler? [Y,n] \n')
-    magnet = Storage[int(choice)].magnet
-    torrentDownloader(magnet,inOrout)
-    print('Download has completed.')
+    recursionCheck = searcher()
+    while recursionCheck == 'y' or recursionCheck == 'Y':
+        recursionCheck = searcher()
+    else:
+        print('Download has completed')
+        
+        
+   
