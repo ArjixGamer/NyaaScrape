@@ -25,4 +25,4 @@ Options:
 ```
 ### Tips and tricks:
 1. If the episode option is not used then by default the script will search for all anime/manga from trusted sources and all the uploaders. Also it will sort out the print results by size so that its easier to find batch download torrents.
-2. To get again the blank, just type the name of the script and --help next to it in the terminal.
+2. The usage section is always accessible with just typying the name of the script and --help next to it in the terminal.
