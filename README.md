@@ -1,7 +1,7 @@
-#Introduction:
+# Introduction:
 This is a project that aims to make downloading from Nyaa.si easier for the user.
 It is inspired from [anime dl](https://github.com/vn-ki/anime-downloader "anime dl").
-###Usage:
+### Usage:
 ```
 Usage: nyaascrape.py [OPTIONS]
 
@@ -23,6 +23,6 @@ Options:
 
   --help                         Show this message and exit.
 ```
-###Tips and tricks:
+### Tips and tricks:
 1. If the episode option is not used then by default the script will search for all anime/manga from trusted sources and all the uploaders. Also it will sort out the print results by size so that its easier to find batch download torrents.
 2. To get again the blank, just type the name of the script and --help next to it in the terminal.
