@@ -1,19 +1,14 @@
 from bs4 import BeautifulSoup as bs
-import requests
-import urllib
-import re
-import os
-import subprocess
-import sys
-import click
+import sys, click, subprocess, os, re, urllib, requests
+# from tabulate import tabulate
 @click.command()
-@click.option('--type', '-t', help='Choose Anime or Manga.                            Default: Anime.', default='Anime', metavar='Anime/Manga')
-@click.option('--uploader', '-u', help='Choose Anime/Manga provider.	[HorribleSubs, PuyaSubs, Ynk, GJM, BlurayDesuYo] [0, 1, 2, 3, 4].', default=9999, metavar='Uploader')
-@click.option('--search', '-s', help='Search', required=True, metavar='Anime/Manga', multiple=True)
+@click.option('--type', '-t', help='Choose Anime or Manga.                            Default: Anime.', default='Anime', metavar='[Anime/Manga]')
+@click.option('--uploader', '-u', help='Choose Anime/Manga provider.	[HorribleSubs, PuyaSubs, Ynk, GJM, BlurayDesuYo].', default=9999, metavar='[0|1|2|3|4]')
+@click.option('--search', '-s', help='Search', required=True, metavar='[Anime/Manga]', multiple=True)
 @click.option('--episode', '-e', help='Select an episode/chapter.', metavar='Episode/Chapter')
-@click.option('--filter', '-f', help='Filter by: size(0), seeders(1), id(2).          Default: Size.', default=0)
-@click.option('--sort', help='Sort by: ascending(1), descending(0).          Default: Descending.', default=0)
-@click.option('--external', '-xd', help='Download with Aria2c(0) or using an external downloader(1).          Default: Aria2c.', default=0, metavar='[0/1]')
+@click.option('--filter', '-f', help='Filter by: size(0), seeders(1), id(2).          Default: Size.', default=0, metavar='[0|1|2]')
+@click.option('--sort', help='Sort by: ascending(1), descending(0).          Default: Descending.', default=0, metavar='[0|1]')
+@click.option('--external', '-xd', help='Download with Aria2c(0) or using an external downloader(1).          Default: Aria2c.', default=0, metavar='[0|1]')
 def main(type, search, filter, sort, external, episode, uploader):
 	if episode == None:
 		if uploader == 9999:
@@ -145,10 +140,15 @@ def main(type, search, filter, sort, external, episode, uploader):
 		page = requests.get(Link).text
 		link = bs(page, 'html.parser')
 		Storage = searchResults(link)
+		table = []
 		for i in range(len(Storage)):
-			print(i, ' ', Storage[i], '\n',
-				Storage[i].size, '\n',
-				'Seeders', Storage[i].seeders )
+			num = str(i)
+			name = Storage[i]
+			seed = Storage[i].seeders
+			size = Storage[i].size
+			line = "{} - {} ".format(num, name)
+			line = str(line) + ''+ 'seeds: '+ seed+' '+ size
+			print(line)
 		choice = input('Which one would you like to select? \n')
 		magnet = Storage[int(choice)].magnet
 		torrentDownloader(magnet)
@@ -181,13 +181,11 @@ def main(type, search, filter, sort, external, episode, uploader):
 			if self.meta:
 				return ' | '.join(val for _, val in self.meta.items())
 			return ''
-
-	if __name__ == '__main__':
-		regex = r'(magnet:)+[^"]*'
+	regex = r'(magnet:)+[^"]*'
+	recursionCheck = searcher()
+	while recursionCheck == 'y' or recursionCheck == 'Y':
 		recursionCheck = searcher()
-		while recursionCheck == 'y' or recursionCheck == 'Y':
-			recursionCheck = searcher()
-		else:
-			pass
+	else:
+		pass
 if __name__ == '__main__':
-		main()
+	main()
