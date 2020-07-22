@@ -1,127 +1,92 @@
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup
+from tabulate import tabulate
 import requests
-import urllib
+import click
 import re
-import os
-import subprocess
-import sys
 
-def userSelection():
-    cataChecker = input("Anime or Manga \n")
-    if cataChecker == 'Anime' or cataChecker == 'anime' or cataChecker == 'a':
-        search = showCheck()
-        filt = filterCheck()
-        ud = udCheck()
-        link = f'https://nyaa.si/?q={search}&f=0&c=1_2&s={filt}&o={ud}'
-        return link
-    elif cataChecker == 'Manga' or cataChecker == 'manga' or cataChecker == 'm':
-        search = showCheck()
-        filt = filterCheck()
-        ud = udCheck()
-        link = f'https://nyaa.si/?q={search}&f=0&c=3_1&s={filt}&o={ud}'
-        return link
-    else:
-        raise Exception("Please insert anime or manga!")
-        
-def filterCheck():
-    filta = ['size','seeders','id']
-    ud = ['asc','desc']
-    filt = input("Filter by Size (0), Seeders (1), Date (2) \n")
-    if int(filt) < 3 and int(filt) > -1:
-        return filta[int(filt)]
-    else:
-        raise Exception("Please use the correct selections!")
-        
-def udCheck():
-    ud = ['desc','asc']
-    choice = input("Descending (0) or Ascending? (1) \n")
-    if int(choice) < 2 and int(choice) > -1:
-        return ud[int(choice)]
-    else:
-        raise Exception("Please use the correct selections!")
+@click.command()
+@click.option('--search', '-s', 'search', metavar='QUERY', help='Search the specified string on nyaa.', type=str, required=True)
+@click.option('--filter', '-f', 'filte', metavar=['size','seeders','date'], help='Filter the search results using the given filter.', \
+	type=click.Choice(['size','seeders','date'], case_sensitive=True), required=False, default='seeders', show_default=True)
+@click.option('--sort', 'sort', metavar=['asc','desc'], help='Sort the search result in the given order.', \
+	type=click.Choice(['asc','desc'], case_sensitive=True), required=False, default='desc', show_default=True)
+@click.option('--media-type', '-mt', 'MediaType', metavar=['anime','manga'], help='Choose what type of media to search for.', \
+	type=click.Choice(['anime','manga'], case_sensitive=True), required=False, default='anime', show_default=True)
+@click.option('--external-downloader', '-xd', 'external_downloader', help='If used the download will start with the given program.', required=False, default='')
+@click.option('--choice', '-c', 'Choice', help='If used the results will not be printed and the download for the selected result will start.', required=False, default=None, type=int)
 
-def showCheck():
-    search = input("What do you want to search for? \n")
-    return search
 
-def torrentDownloader(magnet,inOrout):
-    if inOrout == 'Y' or inOrout == 'y':
-        os.startfile(magnet)
-    else:
-        def run_command(magnet):
-            process = subprocess.Popen(f'aria2c {magnet}', stdout=subprocess.PIPE)
-            while True:
-                output = process.stdout.readline()
-                if output == '' and process.poll() is not None:
-                    break
-                if output:
-                    print (output.strip())
-            rc = process.poll()
-            return rc
-        run_command(magnet)
-        
+def main(search, filte, sort, MediaType, external_downloader, Choice):
+	filters = {'seeders': 's=seeders', 'size': 's=size', 'date': 's=id'}
+	media_types = {'anime': 'c=1_2', 'manga': 'c=3_1'}
+	link = f'https://nyaa.si/?{media_types[MediaType]}&q={search}&{filters[filte]}&o={sort}'
+	results = searchResults(BeautifulSoup(requests.get(link).text, 'html.parser'))
+	table, magnets = make_pretty_table(results)
+	if not Choice:
+		click.echo(table)
+		choice = click.prompt('Enter the anime no: ', type=int, default=0)
+	else:
+		choice = Choice
+	download_link = magnets[choice]
+	downloader(download_link, external_downloader)
 
-def searchResults(link):
-    Storage = [
-        SearchResult(
-        title = i.select("a:not(.comments)")[1].get("title"),
-        size = i.find_all('td',class_ = 'text-center')[1].text,
-        seeders = i.find_all('td',class_= 'text-center')[3].text,
-        leechers = i.find_all('td',class_ = 'text-center')[4].text,
-        magnet = i.find_all('a',{'href':re.compile(regex)})[0].get('href'))
-        for i in link.select("tr.default, tr.success")
-    ]
-    return Storage
-def searcher():
-    Link = userSelection()
-    page = requests.get(Link).text
-    lol = bs(page, 'html.parser')
-    Storage = searchResults(lol)
-    for i in range(len(Storage)):
-        print(i, ' ', Storage[i], '\n',
-            Storage[i].size, '\n',
-            'Seeders', Storage[i].seeders )
-    choice = input('Which one would you like to select? \n')
-    inOrout = input('Would you like to use an external torrent handler? [Y,n] \n')
-    magnet = Storage[int(choice)].magnet
-    torrentDownloader(magnet,inOrout)
-    recursionCheck = input('Do you want to download another? [Y/n]')
-    return recursionCheck
 
+## Result object
 class SearchResult:
-    def __init__(self, title, size, seeders, leechers, magnet, poster='', meta=''):
-        self.title = title
-        self.magnet = magnet
-        self.size = size
-        self.leechers = leechers
-        self.seeders = seeders
-        self.poster = poster
-        self.meta = meta
+	def __init__(self, title, size, seeders, leechers, magnet, poster='', meta=''):
+		self.title = title.replace('.mkv', '').strip()
+		self.magnet = magnet
+		self.size = size
+		self.leechers = leechers
+		self.seeders = seeders
+		self.poster = poster
+		self.meta = meta
 
-    def __repr__(self):
-        return '<SearchResult Title: {} Size: {} Seeders: {} Leechers: {} Magnet: {}>'.format(self.title, self.size,
-                                                                                            self.seeders,
-                                                                                            self.leechers,
-                                                                                            self.magnet)
-    def __str__(self):
-        return self.title
+	def __str__(self):
+		return self.title
 
-    @property
-    def pretty_metadata(self):
-        """
-        pretty_metadata is the prettified version of metadata
-        """
-        if self.meta:
-            return ' | '.join(val for _, val in self.meta.items())
-        return ''
+
+
+## Returns a list with all the search results
+def searchResults(html_source):
+	regex = r'(magnet:)+[^"]*'
+	Storage = [
+		SearchResult(
+		title = i.select("a:not(.comments)")[1].get("title"),
+		size = i.find_all('td',class_ = 'text-center')[1].text,
+		seeders = i.find_all('td',class_= 'text-center')[3].text,
+		leechers = i.find_all('td',class_ = 'text-center')[4].text,
+		magnet = i.find_all('a',{'href':re.compile(regex)})[0].get('href').replace('\n', ''))
+		for i in html_source.select("tr.default, tr.success")
+	]
+	return Storage
+
+## Makes a table for tabulate and returns the table along the magnet links
+def make_pretty_table(list_results):
+
+	results_list = []
+	magnet_links = []
+	count = -1
+	for anime in list_results:
+		count += 1
+		entry = [count, anime.title, anime.seeders, anime.size]
+		results_list.append(entry)
+		magnet_links.append(anime.magnet)
+
+
+	headers = ['SlNo', "Title", "Seeders", "Size"]
+	table = tabulate(results_list, headers, tablefmt='psql')
+	table = '\n'.join(table.split('\n')[::-1])
+	return table, magnet_links
+
+def downloader(magnet_link, external_downloader):
+	import subprocess
+	if not external_downloader:
+		command = ['aria2c', magnet_link]
+	else:
+		command = [external_downloader, magnet_link]
+	subprocess.run(command, shell=True)
+	print('Finished Downloading!')
 
 if __name__ == '__main__':
-    regex = r'(magnet:)+[^"]*'
-    recursionCheck = searcher()
-    while recursionCheck == 'y' or recursionCheck == 'Y':
-        recursionCheck = searcher()
-    else:
-        print('Download has completed')
-        
-        
-   
+	main()
