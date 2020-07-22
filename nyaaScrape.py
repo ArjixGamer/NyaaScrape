@@ -12,7 +12,7 @@ import re
 	type=click.Choice(['asc','desc'], case_sensitive=True), required=False, default='desc', show_default=True)
 @click.option('--media-type', '-mt', 'MediaType', metavar=['anime','manga'], help='Choose what type of media to search for.', \
 	type=click.Choice(['anime','manga'], case_sensitive=True), required=False, default='anime', show_default=True)
-@click.option('--external-downloader', '-xd', 'external_downloader', help='If used the download will start with the given program.', required=False, default='')
+@click.option('--external-downloader', '-xd', 'external_downloader', help='If used the download will start with the given program. Use "system" to download with the default torrent program.', required=False, default='')
 @click.option('--choice', '-c', 'Choice', help='If used the results will not be printed and the download for the selected result will start.', required=False, default=None, type=int)
 
 
@@ -80,13 +80,16 @@ def make_pretty_table(list_results):
 	return table, magnet_links
 
 def downloader(magnet_link, external_downloader):
-	import subprocess
+	import subprocess, os
 	if not external_downloader:
 		command = ['aria2c', magnet_link]
+		subprocess.run(command, shell=True)
+	elif external_downloader == 'system':
+		os.startfile(magnet_link)
 	else:
 		command = [external_downloader, magnet_link]
-	subprocess.run(command, shell=True)
-	print('Finished Downloading!')
-
+		subprocess.run(command, shell=True)
+	
 if __name__ == '__main__':
 	main()
+	print('Finished Downloading!')
