@@ -17,10 +17,10 @@ import re
 
 
 def main(search, filte, sort, MediaType, external_downloader, Choice):
-	filters = {'seeders': 's=seeders', 'size': 's=size', 'date': 's=id'}
-	media_types = {'anime': 'c=1_2', 'manga': 'c=3_1'}
-	link = f'https://nyaa.si/?{media_types[MediaType]}&q={search}&{filters[filte]}&o={sort}'
-	results = search_results(BeautifulSoup(requests.get(link).text, 'html.parser'))
+	filters = {'seeders': 'seeders', 'size': 'size', 'date': 'id'}
+	media_types = {'anime': '1_2', 'manga': '3_1'}
+	params = {'c': media_types[MediaType], 'q': search, 's': filters[filte], 'o': sort}
+	results = search_results(BeautifulSoup(requests.get('https://nyaa.si', params=params).text, 'html.parser'))
 	table, magnets = make_pretty_table(results) # here i map the tuple of the 2 lists to 2 variables
 	if not Choice:
 		click.echo(table)
