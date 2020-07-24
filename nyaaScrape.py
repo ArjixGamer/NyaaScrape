@@ -33,14 +33,20 @@ def main(search, filte, sort, MediaType, external_downloader, Choice):
 
 ## A class object that will store all info for each result.
 class search_result:
-	def __init__(self, title, size, seeders, leechers, magnet, poster='', meta=''):
+	def __init__(self, title, size, seeders, leechers, magnet, link, poster='', meta=''):
 		self.title = title.replace('.mkv', '').strip()
+		self.link = 'https://nyaa.si' + link
+		tmp_soup = BeautifulSoup(requests.get(self.link).text, 'html.parser')
 		self.magnet = magnet
 		self.size = size
 		self.leechers = leechers
 		self.seeders = seeders
 		self.poster = poster
 		self.meta = meta
+		self.uploader = tmp_soup.find('a', class_='text-success').text
+		self.uploader_safety = tmp_soup.find('a', class_='text-success')['title']
+		self.description = tmp_soup.find('div', id='torrent-description').text
+		self.total_files = len([x.text for x in tmp_soup.find('div', class_='torrent-file-list panel-body').find('ul').find_all('li')])
 
 	def __str__(self):
 		return self.title
