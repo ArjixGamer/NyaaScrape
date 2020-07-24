@@ -34,3 +34,4 @@ Options:
 ```
 ### Tips and tricks:
 1. The usage section is always accessible with just typing the name of the script and --help next to it in the terminal.
+example: ``python nyaaScrape.py --help``
