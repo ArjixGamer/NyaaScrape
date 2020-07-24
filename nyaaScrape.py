@@ -12,16 +12,16 @@ import re
 	type=click.Choice(['asc','desc'], case_sensitive=True), required=False, default='desc', show_default=True)
 @click.option('--media-type', '-mt', 'MediaType', metavar=['anime','manga'], help='Choose what type of media to search for.', \
 	type=click.Choice(['anime','manga'], case_sensitive=True), required=False, default='anime', show_default=True)
-@click.option('--external-downloader', '-xd', 'external_downloader', help='If used the download will start with the given program. Use "system" to download with the default torrent program.', required=False, default='')
-@click.option('--choice', '-c', 'Choice', help='If used the results will not be printed and the download for the selected result will start.', required=False, default=None, type=int)
+@click.option('--external-downloader', '-xd', 'external_downloader', help='When used the download will start with the given program. Use "system" as a program value to download with the default torrent program.', required=False, default='')
+@click.option('--choice', '-c', 'Choice', help='When used the results will not be printed and the download for the selected result will start.', required=False, default=None, type=int)
 
 
 def main(search, filte, sort, MediaType, external_downloader, Choice):
 	filters = {'seeders': 's=seeders', 'size': 's=size', 'date': 's=id'}
 	media_types = {'anime': 'c=1_2', 'manga': 'c=3_1'}
 	link = f'https://nyaa.si/?{media_types[MediaType]}&q={search}&{filters[filte]}&o={sort}'
-	results = searchResults(BeautifulSoup(requests.get(link).text, 'html.parser'))
-	table, magnets = make_pretty_table(results)
+	results = search_results(BeautifulSoup(requests.get(link).text, 'html.parser'))
+	table, magnets = make_pretty_table(results) # here i map the tuple of the 2 lists to 2 variables
 	if not Choice:
 		click.echo(table)
 		choice = click.prompt('Enter the anime no: ', type=int, default=0)
@@ -31,8 +31,8 @@ def main(search, filte, sort, MediaType, external_downloader, Choice):
 	downloader(download_link, external_downloader)
 
 
-## Result object
-class SearchResult:
+## A class object that will store all info for each result.
+class search_result:
 	def __init__(self, title, size, seeders, leechers, magnet, poster='', meta=''):
 		self.title = title.replace('.mkv', '').strip()
 		self.magnet = magnet
@@ -47,11 +47,11 @@ class SearchResult:
 
 
 
-## Returns a list with all the search results
-def searchResults(html_source):
+## Returns a list where every item of the list is a search_result object with info inside it.
+def search_results(html_source):
 	regex = r'(magnet:)+[^"]*'
 	Storage = [
-		SearchResult(
+		search_result(
 		title = i.select("a:not(.comments)")[1].get("title"),
 		size = i.find_all('td',class_ = 'text-center')[1].text,
 		seeders = i.find_all('td',class_= 'text-center')[3].text,
@@ -67,17 +67,20 @@ def make_pretty_table(list_results):
 	results_list = []
 	magnet_links = []
 	count = -1
+	# Creates 2 separate parallel lists, the first one is a 2 dimensional list for the pretty table, 
+	# and the 2nd one is to access the magnet link for each item in the 1st list
 	for anime in list_results:
 		count += 1
 		entry = [count, anime.title, anime.seeders, anime.size]
 		results_list.append(entry)
 		magnet_links.append(anime.magnet)
 
-
+	# for every header there must be an equivalent item in the list, thats why tables have 2 dimensional lists
+	# so that each item can correspond to a header
 	headers = ['SlNo', "Title", "Seeders", "Size"]
 	table = tabulate(results_list, headers, tablefmt='psql')
 	table = '\n'.join(table.split('\n')[::-1])
-	return table, magnet_links
+	return table, magnet_links # here i return a tuple of the two lists
 
 def downloader(magnet_link, external_downloader):
 	import subprocess, os
