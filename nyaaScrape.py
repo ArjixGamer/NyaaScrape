@@ -88,7 +88,12 @@ def downloader(magnet_link, external_downloader):
 		command = ['aria2c', magnet_link]
 		subprocess.run(command, shell=True)
 	elif external_downloader == 'system':
-		os.startfile(magnet_link)
+		import subprocess, sys
+		if 'win' not in sys.platform:
+			opener ="open" if sys.platform == "darwin" else "xdg-open"
+			subprocess.call([opener, magnet_link])
+		else:
+			os.startfile(magnet_link)
 	else:
 		command = [external_downloader, magnet_link]
 		subprocess.run(command, shell=True)
