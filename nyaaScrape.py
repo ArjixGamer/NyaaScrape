@@ -43,8 +43,6 @@ class search_result:
 		self.seeders = seeders
 		self.poster = poster
 		self.meta = meta
-		self.uploader = tmp_soup.find('a', class_='text-success').text
-		self.uploader_safety = tmp_soup.find('a', class_='text-success')['title']
 		self.description = tmp_soup.find('div', id='torrent-description').text
 		self.total_files = len([x.text for x in tmp_soup.find('div', class_='torrent-file-list panel-body').find('ul').find_all('li')])
 
