@@ -54,6 +54,7 @@ def search_results(html_source):
 	Storage = [
 		search_result(
 		title = i.select("a:not(.comments)")[1].get("title"),
+		link = i.select("a:not(.comments)")[1].get('href'),
 		size = i.find_all('td',class_ = 'text-center')[1].text,
 		seeders = i.find_all('td',class_= 'text-center')[3].text,
 		leechers = i.find_all('td',class_ = 'text-center')[4].text,
